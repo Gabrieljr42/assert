@@ -1218,7 +1218,12 @@ class Assert
      *
      * @psalm-pure
      *
+     * @template TAllowed
+     * @param array<array-key, TAllowed> $values
+     * @psalm-assert TAllowed $value
+     *
      * @param string|callable():string $message
+     * @return TAllowed
      *
      * @throws InvalidArgumentException
      */
@@ -1234,7 +1239,12 @@ class Assert
      *
      * @psalm-pure
      *
+     * @template TAllowed
+     * @param array<array-key, TAllowed> $values
+     * @psalm-assert TAllowed $value
+     *
      * @param string|callable():string $message
+     * @return TAllowed
      *
      * @throws InvalidArgumentException
      */

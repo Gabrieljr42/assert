@@ -338,7 +338,7 @@ BODY;
                 foreach ($values as $value) {
                     $parts = $this->splitDocLine($value);
                     if ('mixed' !== $parts[0]) {
-                        $phpdocReturnType = $this->applyTypeTemplate($parts[0], $typeTemplate, $templateTypeNames);
+                        $phpdocReturnType = $this->applyTypeTemplate($parts[0], $typeTemplate, $templateTypeNames, $this->preservesNullEntries($newMethodName));
                     }
                 }
                 continue;
@@ -357,7 +357,7 @@ BODY;
                 }
 
                 if ('psalm-assert' === $key) {
-                    $type = $this->applyTypeTemplate($type, $typeTemplate, $templateTypeNames);
+                    $type = $this->applyTypeTemplate($type, $typeTemplate, $templateTypeNames, $this->preservesNullEntries($newMethodName));
 
                     $phpdocReturnType = $type;
                 }
@@ -452,9 +452,9 @@ BODY;
         return '?'.$typeStr;
     }
 
-    private function applyTypeTemplate(string $type, string $typeTemplate, array $templateTypeNames = []): string
+    private function applyTypeTemplate(string $type, string $typeTemplate, array $templateTypeNames = [], bool $preserveNullEntries = false): string
     {
-        if (in_array($type, $templateTypeNames, true) && str_contains($typeTemplate, 'iterable') && str_contains($typeTemplate, '|null')) {
+        if (!$preserveNullEntries && in_array($type, $templateTypeNames, true) && str_contains($typeTemplate, 'iterable') && str_contains($typeTemplate, '|null')) {
             $typeTemplate = str_replace('|null', '', $typeTemplate);
         }
 
@@ -465,6 +465,11 @@ BODY;
         }
 
         return $combinedType;
+    }
+
+    private function preservesNullEntries(string $methodName): bool
+    {
+        return in_array(strtolower($methodName), ['allnulloroneof', 'allnullorinarray'], true);
     }
 
     private function shouldSkipAnnotation(string $newMethodName, string $key): bool
