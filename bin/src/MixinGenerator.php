@@ -19,6 +19,11 @@ use Webmozart\Assert\Assert;
 
 final class MixinGenerator
 {
+    private const MEMBERSHIP_ASSERTIONS = [
+        'oneof', 'inarray', 'nulloroneof', 'nullorinarray',
+        'alloneof', 'allinarray', 'allnulloroneof', 'allnullorinarray',
+    ];
+
     /**
      * @psalm-var list<string>
      *
@@ -123,23 +128,23 @@ PHP
         $declaredMethods = [];
 
         foreach ($staticMethods as $method) {
-            $this->haveAssert[$method->getName()] = str_contains($method->getDocComment(), '@psalm-assert');
+            $this->haveAssert[$method->getName()] = $this->hasAssertion($method->getName(), $method->getDocComment());
 
             $nullOr = $this->nullOr($method, 4);
             if (null !== $nullOr) {
-                $this->haveAssert["nullOr".$method->getName()] = str_contains($nullOr, '@psalm-assert');
+                $this->haveAssert["nullOr".$method->getName()] = $this->hasAssertion("nullOr".$method->getName(), $nullOr);
                 $declaredMethods[] = $nullOr;
             }
 
             $all = $this->all($method, 4);
             if (null !== $all) {
-                $this->haveAssert["all".$method->getName()] = str_contains($all, '@psalm-assert');
+                $this->haveAssert["all".$method->getName()] = $this->hasAssertion("all".$method->getName(), $all);
                 $declaredMethods[] = $all;
             }
 
             $allNullOr = $this->allNullOr($method, 4);
             if (null !== $allNullOr) {
-                $this->haveAssert["allNullOr".$method->getName()] = str_contains($allNullOr, '@psalm-assert');
+                $this->haveAssert["allNullOr".$method->getName()] = $this->hasAssertion("allNullOr".$method->getName(), $allNullOr);
                 $declaredMethods[] = $allNullOr;
             }
         }
@@ -159,6 +164,12 @@ PHP
             ,
             \implode("\n\n", $declaredMethods)
         );
+    }
+
+    private function hasAssertion(string $methodName, string $docComment): bool
+    {
+        return str_contains($docComment, '@psalm-assert')
+            || in_array(strtolower($methodName), self::MEMBERSHIP_ASSERTIONS, true);
     }
 
     /**

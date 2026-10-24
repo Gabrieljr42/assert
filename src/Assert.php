@@ -1220,8 +1220,6 @@ class Assert
      *
      * @template TAllowed
      * @param array<array-key, TAllowed> $values
-     * @psalm-assert TAllowed $value
-     *
      * @param string|callable():string $message
      * @return TAllowed
      *
@@ -1241,8 +1239,6 @@ class Assert
      *
      * @template TAllowed
      * @param array<array-key, TAllowed> $values
-     * @psalm-assert TAllowed $value
-     *
      * @param string|callable():string $message
      * @return TAllowed
      *

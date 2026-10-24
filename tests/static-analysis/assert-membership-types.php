@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Webmozart\Assert\Tests\StaticAnalysis;
 
+use Traversable;
 use Webmozart\Assert\Assert;
 
 /**
@@ -52,6 +53,96 @@ function oneOfStrictIntAgainstFloat(int|float $value): int
     Assert::oneOf($value, [1]);
 
     return $value;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @return 'red'|'blue'
+ */
+function oneOfReorderedNamedArguments(string $candidate): string
+{
+    $allowed = ['red', 'blue'];
+    $result = Assert::oneOf(values: $allowed, value: $candidate);
+    /** @psalm-check-type-exact $candidate = 'red'|'blue' */
+    /** @psalm-check-type-exact $result = 'red'|'blue' */
+
+    return $result;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @param list<string> $candidate
+ * @return list<'red'|'blue'>
+ */
+function oneOfReorderedNamedArgumentsWithArrayCandidate(array $candidate): array
+{
+    $allowed = [['red'], ['blue']];
+    $result = Assert::oneOf(values: $allowed, value: $candidate);
+    /** @psalm-check-type-exact $candidate = list{'red'|'blue'} */
+    /** @psalm-check-type-exact $result = list{'red'|'blue'} */
+
+    return $result;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @param list<mixed> $candidate
+ * @return list<'red'|'blue'>
+ */
+function allOneOfReorderedNamedArguments(array $candidate): array
+{
+    $allowed = ['red', 'blue'];
+    Assert::allOneOf(values: $allowed, value: $candidate);
+    /** @psalm-check-type-exact $candidate = list<'red'|'blue'> */
+
+    return $candidate;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @param array<string, mixed>|string $candidate
+ * @return array<string, 'red'|'blue'>
+ */
+function allOneOfFiltersNonIterableNamedUnion(array|string $candidate): array
+{
+    $allowed = ['red', 'blue'];
+    Assert::allOneOf(values: $allowed, value: $candidate);
+    /** @psalm-check-type-exact $candidate = array<string, 'red'|'blue'> */
+
+    return $candidate;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @param array<array-key, mixed>|null $candidate
+ * @return array<array-key, 'red'|'blue'>
+ */
+function allOneOfFiltersNullNamedUnion(?array $candidate): array
+{
+    $allowed = ['red', 'blue'];
+    Assert::allOneOf(values: $allowed, value: $candidate);
+    /** @psalm-check-type-exact $candidate = array<array-key, 'red'|'blue'> */
+
+    return $candidate;
+}
+
+/**
+ * @psalm-pure
+ *
+ * @param Traversable<string, mixed> $candidate
+ * @return iterable<string, 'red'|'blue'>
+ */
+function allOneOfNarrowsTraversableNamedCandidate(Traversable $candidate): iterable
+{
+    $allowed = ['red', 'blue'];
+    Assert::allOneOf(values: $allowed, value: $candidate);
+
+    return $candidate;
 }
 
 /**

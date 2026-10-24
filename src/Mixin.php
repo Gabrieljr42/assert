@@ -2866,8 +2866,6 @@ trait Mixin
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
      *
-     * @psalm-assert TAllowed|null $value
-     *
      * @return TAllowed|null
      *
      * @throws InvalidArgumentException
@@ -2886,8 +2884,6 @@ trait Mixin
      *
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
-     *
-     * @psalm-assert iterable<TAllowed> $value
      *
      * @return iterable<TAllowed>
      *
@@ -2912,8 +2908,6 @@ trait Mixin
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
      *
-     * @psalm-assert iterable<TAllowed|null> $value
-     *
      * @return iterable<TAllowed|null>
      *
      * @throws InvalidArgumentException
@@ -2937,8 +2931,6 @@ trait Mixin
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
      *
-     * @psalm-assert TAllowed|null $value
-     *
      * @return TAllowed|null
      *
      * @throws InvalidArgumentException
@@ -2957,8 +2949,6 @@ trait Mixin
      *
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
-     *
-     * @psalm-assert iterable<TAllowed> $value
      *
      * @return iterable<TAllowed>
      *
@@ -2982,8 +2972,6 @@ trait Mixin
      *
      * @param array<array-key, TAllowed> $values
      * @param string|callable():string   $message
-     *
-     * @psalm-assert iterable<TAllowed|null> $value
      *
      * @return iterable<TAllowed|null>
      *

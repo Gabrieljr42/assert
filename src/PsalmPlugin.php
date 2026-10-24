@@ -13,6 +13,7 @@ use Psalm\Type;
 use Psalm\Type\Atomic\TArray;
 use Psalm\Type\Atomic\TIterable;
 use Psalm\Type\Atomic\TKeyedArray;
+use Psalm\Type\Atomic\TMixed;
 use Psalm\Type\Atomic\TNonEmptyArray;
 use Psalm\Type\Union;
 use SimpleXMLElement;
@@ -34,7 +35,11 @@ final class PsalmPlugin implements PluginEntryPointInterface, AfterMethodCallAna
             return;
         }
 
-        $firstArg = $event->getExpr()->getArgs()[0] ?? null;
+        $args = $event->getExpr()->getArgs();
+        $isMembership = \in_array(\strtolower($method), ['oneof', 'inarray', 'nulloroneof', 'nullorinarray', 'alloneof', 'allinarray', 'allnulloroneof', 'allnullorinarray'], true);
+        $firstArg = $isMembership
+            ? self::getArgument($args, 'value', 0)
+            : ($args[0] ?? null);
         if ($firstArg === null) {
             return;
         }
@@ -51,8 +56,8 @@ final class PsalmPlugin implements PluginEntryPointInterface, AfterMethodCallAna
 
         $candidateType = $event->getContext()->vars_in_scope[$varId];
 
-        if (\in_array(\strtolower($method), ['oneof', 'inarray', 'nulloroneof', 'nullorinarray', 'alloneof', 'allinarray', 'allnulloroneof', 'allnullorinarray'], true)) {
-            $valuesArg = $event->getExpr()->getArgs()[1] ?? null;
+        if ($isMembership) {
+            $valuesArg = self::getArgument($args, 'values', 1);
             if ($valuesArg === null) {
                 return;
             }
@@ -87,6 +92,22 @@ final class PsalmPlugin implements PluginEntryPointInterface, AfterMethodCallAna
         }
 
         $event->setReturnTypeCandidate($candidateType);
+    }
+
+    /**
+     * @param list<\PhpParser\Node\Arg> $args
+     */
+    private static function getArgument(array $args, string $name, int $position): ?\PhpParser\Node\Arg
+    {
+        foreach ($args as $arg) {
+            if (!$arg->unpack && $arg->name?->name === $name) {
+                return $arg;
+            }
+        }
+
+        $arg = $args[$position] ?? null;
+
+        return $arg !== null && $arg->name === null && !$arg->unpack ? $arg : null;
     }
 
     private static function intersect(Union $type, Union $allowedType, AfterMethodCallAnalysisEvent $event): Union
@@ -140,11 +161,19 @@ final class PsalmPlugin implements PluginEntryPointInterface, AfterMethodCallAna
                     $atomicType->type_params[0],
                     self::intersect($atomicType->type_params[1], $allowedType, $event),
                 ], $atomicType->extra_types);
+            } elseif ($atomicType instanceof TMixed) {
+                $narrowed[] = new TIterable([Type::getMixed(), $allowedType]);
+            } elseif ($atomicType->isIterable($event->getCodebase())) {
+                $iterableType = $atomicType->getIterable($event->getCodebase());
+                $narrowed[] = new TIterable([
+                    $iterableType->type_params[0],
+                    self::intersect($iterableType->type_params[1], $allowedType, $event),
+                ], [$atomicType]);
             } else {
-                $narrowed[] = $atomicType;
+                continue;
             }
         }
 
-        return new Union($narrowed);
+        return $narrowed === [] ? Type::getNever() : new Union($narrowed);
     }
 }
